@@ -1,6 +1,6 @@
 name: Refresh prompts.json
 on:
-  schedule: [{ cron: "0 6 * * 1" }]
+  schedule: [{ cron: "0 6 * * *" }]   # every day 06:00 UTC
   workflow_dispatch:
 permissions:
   contents: write
