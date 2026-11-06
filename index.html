@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Pixel Ascent</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen:wght@400;700&family=VT323&display=swap">
+<style>
+:root{--bg:#0a1222;--panel:#0d1830;--line:#2a3b5f;--ink:#e6edff;--dim:#7d8fb5;--cy:#4cd6ff;--pk:#ff4f7b;--box-shadow:#00000066;color-scheme:dark;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root{--bg:#0a1222;--panel:#0d1830;--ink:#e6edff}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;background:var(--bg);color:var(--ink);font-family:'Silkscreen','Courier New',monospace;overflow:hidden;-webkit-tap-highlight-color:transparent}
+#app{position:absolute;inset:0;overflow:hidden}
+canvas{position:absolute;inset:0;width:100%;height:100%;image-rendering:pixelated}
+#app::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(0deg,rgba(0,0,0,.13) 0 1px,transparent 1px 3px)}
+.hud{position:absolute;top:calc(env(safe-area-inset-top,0px) + 10px);left:max(10px,calc((100% - 540px)/2));right:max(10px,calc((100% - 540px)/2));display:flex;justify-content:space-between;align-items:flex-start;gap:8px;z-index:3}
+.box{background:rgba(10,18,34,.88);border:3px solid var(--line);padding:6px 12px;min-width:104px}
+.box small{display:block;font-size:10px;letter-spacing:.2em;color:var(--dim)}
+.box b{font-family:'VT323',monospace;font-size:30px;font-weight:400;color:var(--cy);line-height:1}
+.box.r{text-align:right}.box.r b{color:var(--pk)}
+.pips{display:flex;gap:4px;justify-content:center;margin-top:2px}.pips i{width:16px;height:16px;border:2px solid var(--line);background:#0b1426}.pips i.on{background:var(--pk);border-color:#fff}.pips i.done{background:#3a4f7d}
+.mid{text-align:center;font-size:10px;letter-spacing:.2em;color:var(--dim)}
+#panel{position:absolute;left:max(10px,calc((100% - 540px)/2));right:max(10px,calc((100% - 540px)/2));bottom:calc(env(safe-area-inset-bottom,0px) + 12px);z-index:4}
+.card{background:rgba(10,18,34,.94);border:3px solid var(--line);padding:16px 18px}
+.eyebrow{color:var(--pk);font-size:12px;letter-spacing:.3em;margin-bottom:8px}
+.q{font-size:24px;font-weight:700;line-height:1.25;margin:0 0 8px;color:#fff}
+.hint{font-size:11px;letter-spacing:.14em;color:var(--dim)}
+.row{display:flex;gap:10px;align-items:stretch;margin-top:12px}
+.ring{--p:100;flex:0 0 62px;height:62px;border-radius:50%;background:conic-gradient(var(--cy) calc(var(--p)*1%),#12203a 0);display:grid;place-items:center;position:relative}
+.ring::before{content:"";position:absolute;inset:6px;border-radius:50%;background:#0a1222}
+.ring span{position:relative;font-family:'VT323',monospace;font-size:28px;color:var(--cy)}
+input{flex:1;min-width:0;background:#0a1222;border:3px solid #2f8ea8;color:#fff;font-family:'VT323',monospace;font-size:24px;padding:0 10px;border-radius:0;outline:none}
+input:focus{border-color:var(--cy)}input::placeholder{color:#556487}
+.btn{font-family:'Silkscreen',monospace;font-weight:700;letter-spacing:.2em;font-size:14px;color:#14080f;background:#c93a64;border:3px solid #ff7f9f;border-bottom-width:6px;padding:0 14px;cursor:pointer;border-radius:0}
+.btn:active{border-bottom-width:3px;transform:translateY(3px)}
+.btn.big{display:block;width:100%;height:64px;color:var(--ink);background:#14213d;border-color:var(--cy);font-size:16px}
+.btn.alt{background:#0d1830;color:var(--dim);border-color:var(--line);height:48px;font-size:12px;margin-top:10px}
+.btn:focus-visible,input:focus-visible{outline:3px solid #fff;outline-offset:2px}
+.msg{min-height:16px;font-size:11px;letter-spacing:.12em;color:var(--pk);margin-top:8px}
+.cf{margin-top:10px;border:2px solid var(--cy);padding:8px 10px;font-size:12px;letter-spacing:.12em;color:var(--cy)}.cfb{display:flex;gap:8px;margin-top:8px}.cfb .btn{height:40px;font-size:11px;flex:1;padding:0 8px}.btn.alt2{background:#0d1830;color:var(--dim);border-color:var(--line)}
+.tier{display:inline-block;padding:3px 8px;font-size:12px;letter-spacing:.2em;color:#08101f;margin-bottom:8px}
+.gain{font-family:'VT323',monospace;font-size:38px;line-height:1;margin:2px 0 8px}
+.fact{border-left:4px solid var(--cy);padding:4px 0 4px 12px;margin:10px 0 14px;font-size:14px;line-height:1.55;letter-spacing:.04em}
+.fact b{display:block;color:var(--cy);margin-bottom:2px}
+#menu,#end{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;justify-content:flex-end;padding:20px max(12px,calc((100% - 540px)/2)) calc(env(safe-area-inset-bottom,0px) + 20px);background:linear-gradient(180deg,rgba(6,12,28,.1),rgba(6,12,28,.88) 55%)}
+h1{font-size:44px;line-height:1;margin:0 0 6px;letter-spacing:.06em;color:#fff;text-shadow:3px 3px 0 var(--pk)}
+.sub{font-size:12px;letter-spacing:.18em;color:var(--dim);margin:0 0 22px;line-height:1.7}
+.stat{display:flex;justify-content:space-between;font-size:13px;letter-spacing:.1em;padding:8px 0;border-bottom:2px solid #1c2b4a}.stat b{color:var(--cy);font-family:'VT323',monospace;font-size:24px;font-weight:400}
+.hide{display:none!important}
+@media (prefers-reduced-motion:reduce){.btn:active{transform:none}}
+</style>
+</head>
+<body>
+<div id="app">
+<canvas id="c"></canvas>
+<div class="hud">
+ <div class="box"><small>ALTITUDE</small><b id="alt">0m</b></div>
+ <div class="mid"><div class="pips" id="pips"></div><div id="pl" style="margin-top:6px"></div></div>
+ <div class="box r"><small>SCORE</small><b id="sc">0</b></div>
+</div>
+<div id="menu">
+ <h1>PIXEL<br>ASCENT</h1>
+ <p class="sub">NAME THINGS. RARER ANSWERS<br>BLAST YOU HIGHER.</p>
+ <button class="btn big" id="go">&#9650; BEGIN ASCENT &#9650;</button>
+ <button class="btn alt" id="daily">TODAY’S CLIMB</button>
+ <div class="hint" style="margin-top:14px;text-align:center" id="best"></div>
+</div>
+<div id="panel" class="hide">
+ <div class="card" id="ask">
+  <div class="eyebrow" id="ey"></div>
+  <p class="q" id="q"></p>
+  <div class="hint">&#9650; rarer answers climb higher &#9650;</div>
+  <div class="row">
+   <div class="ring" id="ring"><span id="tm">30</span></div>
+   <input id="in" type="text" placeholder="type one answer…" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="go">
+   <button class="btn" id="launch">LAUNCH</button>
+  </div>
+  <div class="msg" id="msg"></div>
+  <div class="cf hide" id="cf"><div id="cft"></div><div class="cfb"><button class="btn alt2" id="cn">NO, KEEP MINE</button></div></div>
+ </div>
+ <div class="card hide" id="res"></div>
+</div>
+<div id="end" class="hide"></div>
+</div>
+<script>
+// ---------- DATA: tiers = common | uncommon | rare | epic | legendary ----------
+const P=[
+["Name a noodle dish","spaghetti,ramen,pad thai,lo mein,chicken noodle soup,mac and cheese,fettuccine alfredo|pho,udon,soba,chow mein,lasagna,carbonara,dan dan noodles,penne,tortellini,ravioli,spaghetti bolognese|laksa,pad see ew,japchae,tonkotsu ramen,yakisoba,bun bo hue,cacio e pepe,jajangmyeon,tantanmen,naengmyeon,mie goreng,char kway teow|khao soi,biang biang noodles,lagman,pancit canton,mohinga,kuy teav,kal guksu,pastitsio,pancit palabok|ash reshteh,cao lau,mi quang,banh canh,kluski,shiratake"],
+["Name a programming language","python,javascript,java,c,c++|rust,go,ruby,php,swift,kotlin,typescript,c#,sql,lua,perl,r|haskell,elixir,scala,clojure,erlang,ocaml,julia,dart,fortran,cobol,lisp,zig,nim,crystal|prolog,forth,smalltalk,ada,racket,f#,scheme,d,apl,assembly|holyc,brainfuck,malbolge,befunge,intercal,whitespace,piet,lolcode,arnoldc,shakespeare"],
+["Name a country in Africa","egypt,nigeria,south africa,kenya,morocco,ethiopia,ghana|algeria,tanzania,uganda,senegal,tunisia,libya,sudan,angola,zimbabwe,zambia,cameroon|mali,niger,chad,namibia,botswana,mozambique,madagascar,rwanda,somalia,malawi,benin,togo,mauritania|gabon,gambia,lesotho,eritrea,djibouti,burundi,liberia,sierra leone,guinea,burkina faso,mauritius,congo,democratic republic of the congo,south sudan,ivory coast|eswatini,swaziland,comoros,cabo verde,cape verde,seychelles,sao tome and principe,equatorial guinea,guinea bissau"],
+["Name an animal that lives in the ocean","shark,dolphin,whale,octopus,jellyfish,turtle,seal|orca,stingray,seahorse,starfish,crab,lobster,squid,clownfish,manta ray,sea lion,walrus,eel,pufferfish|narwhal,manatee,sunfish,anglerfish,nautilus,cuttlefish,barracuda,sea urchin,sea cucumber,moray eel,dugong,sea otter,lionfish|vampire squid,hagfish,giant isopod,oarfish,blobfish,goblin shark,dumbo octopus,sea pig,pyjama squid|barreleye fish,yeti crab,pom pom crab,sarcastic fringehead,sea angel,siphonophore,sea butterfly,glaucus atlanticus,bobbit worm,hairy frogfish"],
+["Name a board or card game","monopoly,chess,checkers,uno,scrabble,poker,clue,risk,go fish|catan,settlers of catan,ticket to ride,carcassonne,pandemic,backgammon,bridge,cribbage,mahjong,codenames,battleship,sorry|azul,wingspan,splendor,dominion,agricola,go,gloomhaven,terraforming mars,7 wonders,seven wonders,hanabi,patchwork,dixit,king of tokyo|twilight imperium,spirit island,brass birmingham,root,scythe,eclipse,arkham horror,through the ages,puerto rico,great western trail|hnefatafl,senet,shogi,xiangqi,tak,rithmomachia,royal game of ur,fanorona,tafl"],
+["Name a planet, moon or dwarf planet","mars,earth,jupiter,saturn,venus,mercury,neptune,uranus,pluto,moon|titan,europa,io,ganymede,callisto,enceladus,triton,ceres|phobos,deimos,charon,eris,makemake,haumea,mimas,iapetus,rhea,dione,tethys,oberon,titania|miranda,ariel,umbriel,hyperion,phoebe,nereid,proteus,sedna,quaoar,orcus,gonggong|amalthea,himalia,thebe,puck,larissa,despina,pan,atlas,prometheus,pandora,janus,epimetheus,helene,telesto,calypso,arrokoth,ixion,varuna"],
+["Name something in a toolbox","hammer,screwdriver,wrench,pliers,tape measure,nails,screws,saw|level,drill,utility knife,allen key,socket set,chisel,file,clamp,sandpaper,duct tape,wire stripper|torque wrench,hacksaw,mallet,crowbar,vice grips,stud finder,plumb bob,center punch,rasp,putty knife,tin snips,multimeter|spokeshave,bevel gauge,marking gauge,scratch awl,flush cut saw,tap and die,feeler gauge,cold chisel,reamer|adze,drawknife,froe,brace and bit,scorp,inshave,dividers"],
+["Name a musical instrument","guitar,piano,drums,violin,flute,trumpet,saxophone,bass,clarinet|cello,harp,trombone,ukulele,banjo,accordion,harmonica,oboe,xylophone,tuba,mandolin|bassoon,sitar,didgeridoo,bagpipes,theremin,marimba,french horn,zither,glockenspiel,kalimba,djembe,oud,erhu,synthesizer|hurdy gurdy,nyckelharpa,hammered dulcimer,shamisen,duduk,ocarina,glass armonica,balalaika,tabla,santur,kora,mbira,cimbalom|serpent,ondes martenot,hang drum,hardanger fiddle,cristal baschet,waterphone,sackbut,crwth,lithophone,sarrusophone,theorbo"],
+["Name a dinosaur","t rex,trex,tyrannosaurus rex,tyrannosaurus,triceratops,velociraptor,stegosaurus,brontosaurus|brachiosaurus,diplodocus,spinosaurus,ankylosaurus,allosaurus,iguanodon,parasaurolophus,pachycephalosaurus|carnotaurus,giganotosaurus,dilophosaurus,compsognathus,gallimimus,therizinosaurus,utahraptor,deinonychus,argentinosaurus,microraptor|kentrosaurus,ouranosaurus,albertosaurus,baryonyx,amargasaurus,sinosauropteryx,oviraptor,corythosaurus,styracosaurus,mamenchisaurus|nasutoceratops,qianzhousaurus,yutyrannus,halszkaraptor,nanuqsaurus,kosmoceratops,irritator,tsintaosaurus,zuul,pegomastax"]
+];
+const TIERS=[
+ {n:"COMMON",g:150,p:10,c:"#9fb2d6"},{n:"UNCOMMON",g:450,p:30,c:"#6be28a"},{n:"RARE",g:1400,p:100,c:"#4cd6ff"},
+ {n:"EPIC",g:4000,p:300,c:"#c58bff"},{n:"LEGENDARY",g:12000,p:1000,c:"#ffcf5a"}];
+const UNLISTED={n:"UNLISTED",g:100,p:5,c:"#7d8fb5"};
+const M=[
+ [20,"A 6-story building","About the height of a 6-story building. The pad crew can barely see you."],
+ [100,"Taller than Lady Liberty","The Statue of Liberty is 93 m from ground to torch. You just cleared it."],
+ [324,"The Eiffel Tower","324 m is roughly the Eiffel Tower’s height. It was the tallest structure on Earth until 1930."],
+ [541,"One World Trade Center","This is the height of One World Trade Center: 541 m, which is exactly 1,776 ft, a nod to the year 1776."],
+ [828,"Burj Khalifa","828 m: the Burj Khalifa in Dubai, the tallest building in the world."],
+ [1776,"1,776 meters up","You’ve stacked about 3.3 One World Trade Centers. (The tower itself is 1,776 feet, not meters.)"],
+ [3776,"Mount Fuji","3,776 m: the summit of Mount Fuji, Japan’s highest mountain."],
+ [8849,"Mount Everest","8,849 m: Everest’s summit. Climbers up here carry bottled oxygen."],
+ [11000,"Airliner cruising altitude","About 11 km: where most passenger jets cruise. Outside it’s around -55°C."],
+ [18900,"The Armstrong limit","Above ~18.9 km, water boils at body temperature. Without a pressure suit, that’s a problem."],
+ [50000,"Top of the stratosphere","50 km: the air is about a thousandth as dense as at sea level."],
+ [100000,"The Kármán line","100 km: the conventional edge of space. You’re officially an astronaut."],
+ [160000,"Low Earth orbit zone","Around 160 km is about the lowest altitude where a satellite can orbit for more than a few days."]];
+// ---------- helpers ----------
+const $=id=>document.getElementById(id);
+const norm=s=>s.toLowerCase().replace(/&/g," and ").replace(/[^a-z0-9#+ ]/g," ").replace(/\s+/g," ").trim().replace(/^(the|a|an) /,"");
+const key=s=>norm(s).replace(/s$/,"").replace(/ /g,"");
+const SETS=P.map(p=>p[1].split("|").map(t=>new Set(t.split(",").map(key))));
+const ENT=P.map(p=>p[1].split("|").flatMap((t,i)=>t.split(",").map(n=>({n,k:key(n),t:i}))));
+function lev(a,b){const m=a.length,n=b.length,d=[];for(let i=0;i<=m;i++){d[i]=[i];for(let j=1;j<=n;j++)d[i][j]=i?0:j}for(let i=1;i<=m;i++)for(let j=1;j<=n;j++){d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));if(i>1&&j>1&&a[i-1]===b[j-2]&&a[i-2]===b[j-1])d[i][j]=Math.min(d[i][j],d[i-2][j-2]+1)}return d[m][n]}
+function match(raw){const k=key(raw),L=ENT[S.cur];const ex=L.find(e=>e.k===k);if(ex)return{e:ex,fixed:false};if(k.length<4)return null;const lim=k.length<=5?1:k.length<=8?2:3;let bd=99,be=null;for(const e of L){if(Math.abs(e.k.length-k.length)>lim)continue;const d=lev(k,e.k);if(d<bd||(d===bd&&be&&e.t>be.t)){bd=d;be=e}}return be&&bd<=lim?{e:be,fixed:true}:null}
+const fmt=m=>m>=10000?(m/1000).toFixed(1)+"km":Math.round(m).toLocaleString()+"m";
+function rng(seed){return()=>{seed|=0;seed=seed+0x6D2B79F5|0;let t=Math.imul(seed^seed>>>15,1|seed);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+// ---------- optional live DB (prompts.json built from Wikidata) ----------
+fetch("prompts.json").then(r=>r.ok?r.json():[]).then(db=>{if(!Array.isArray(db))return;for(const d of db){let i=P.findIndex(p=>p[0]===d.q);if(i<0){P.push([d.q,""]);ENT.push([]);i=P.length-1}const have=new Set(ENT[i].map(e=>e.k));for(const [n,t,al] of d.items){for(const nm of [n,...(al||[])]){const k=key(nm);if(!k||have.has(k))continue;have.add(k);ENT[i].push({n,k,t})}}}}).catch(()=>{});
+// ---------- state ----------
+let S=null,best=0;
+try{best=+localStorage.getItem("pa_best")||0}catch(e){}
+function showBest(){$("best").textContent=best?"BEST ALTITUDE "+fmt(best):""}showBest();
+const pips=$("pips");for(let i=0;i<7;i++)pips.appendChild(document.createElement("i"));
+function start(seed){
+ const r=rng(seed),a=P.map((_,i)=>i);
+ for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
+ S={order:a.slice(0,7),i:0,alt:0,score:0,mode:"ask",used:new Set(),tLeft:30,fly:null,maxM:null,from:0};
+ $("menu").classList.add("hide");$("end").classList.add("hide");$("panel").classList.remove("hide");
+ nextPrompt();
+}
+function nextPrompt(){
+ const idx=S.order[S.i];S.cur=idx;S.used=new Set();S.tLeft=30;S.mode="ask";clearPend();
+ $("ey").textContent="PROMPT "+(S.i+1)+" OF 7";$("q").textContent=P[idx][0];
+ $("ask").classList.remove("hide");$("res").classList.add("hide");$("in").value="";$("msg").textContent="";
+ $("pl").textContent="PROMPT "+(S.i+1)+" OF 7";
+ [...pips.children].forEach((p,i)=>p.className=i<S.i?"done":i==S.i?"on":"");
+ setTimeout(()=>$("in").focus({preventScroll:true}),50);
+}
+function submit(){
+ if(!S||S.mode!=="ask")return;
+ const raw=$("in").value.trim();if(!raw)return;
+ if(S.pend){acceptFix();return}
+ const m=match(raw);
+ if(m&&m.fixed){if(S.used.has(m.e.k)){$("msg").textContent="ALREADY USED. TRY ANOTHER.";return}S.pend={m,raw};showConfirm();return}
+ finalize(m,raw,false);
+}
+function finalize(m,raw,fixed){const k=m?m.e.k:key(raw);if(S.used.has(k)){$("msg").textContent="ALREADY USED. TRY ANOTHER.";return}S.used.add(k);resolve(m?TIERS[m.e.t]:UNLISTED,m?m.e.n:raw,fixed?raw:null)}
+function clearPend(){if(S)S.pend=null;$("cf").classList.add("hide")}
+function showConfirm(){$("msg").textContent="";$("cft").textContent="DID YOU MEAN "+S.pend.m.e.n.toUpperCase()+"? PRESS ENTER TO CONFIRM";$("cf").classList.remove("hide")}
+function acceptFix(){const p=S.pend;clearPend();finalize(p.m,p.raw,true)}
+function resolve(tier,raw,orig){
+ S.mode="fly";$("in").blur();
+ const gain=raw===null?0:tier.g;S.score+=raw===null?0:tier.p;
+ S.orig=orig||null;S.from=S.alt;S.target=S.alt+gain;S.tier=tier;S.raw=raw;S.gain=gain;
+ S.fly={t0:performance.now(),dur:gain?1600+Math.min(1800,gain/6):900};
+ $("ask").classList.add("hide");$("panel").classList.add("hide");
+}
+function timeout(){S.mode="fly";resolve(null,null)}
+function arrive(){
+ S.alt=S.target;S.fly=null;S.mode="res";
+ if(S.alt>best){best=S.alt;try{localStorage.setItem("pa_best",String(Math.round(best)))}catch(e){}}
+ let m=null;for(const x of M)if(x[0]>S.from&&x[0]<=S.alt)m=x;
+ if(m&&(!S.maxM||m[0]>S.maxM[0]))S.maxM=m;
+ const last=S.i>=6,t=S.tier;
+ let h;
+ if(S.raw===null){
+  const le=ENT[S.cur].filter(e=>e.t===4),ls=[le.length?le[Math.floor(Math.random()*le.length)].n:"???"];
+  h=`<span class="tier" style="background:#ff4f7b">ENGINES STALLED</span><div class="gain" style="color:#ff4f7b">+0m</div><div class="hint" style="margin-bottom:6px">TIME RAN OUT. A LEGENDARY ANSWER WAS: ${ls[0].toUpperCase()}</div>`;
+ }else{
+  h=`<span class="tier" style="background:${t.c}">${t.n}</span><div class="hint" style="margin-bottom:4px">${esc(S.raw.toUpperCase())}</div>${S.orig?`<div class="hint" style="margin-bottom:4px;color:#6be28a">AUTOCORRECTED FROM “${esc(S.orig.toUpperCase())}”</div>`:""}<div class="gain" style="color:${t.c}">+${fmt(S.gain)}</div>`;
+  if(t===UNLISTED)h+=`<div class="hint">NOT IN OUR LIST, SO ONLY A SMALL BOOST.</div>`;
+ }
+ if(m)h+=`<div class="fact"><b>${m[1]}</b>${m[2]}</div>`;
+ h+=`<button class="btn big" id="nx" style="margin-top:12px;height:54px">${last?"&#9650; FINISH &#9650;":"&#9650; NEXT PROMPT &#9650;"}</button>`;
+ $("res").innerHTML=h;$("res").classList.remove("hide");$("panel").classList.remove("hide");$("ask").classList.add("hide");
+ $("nx").onclick=()=>{if(last)finish();else{S.i++;nextPrompt()}};
+}
+const esc=s=>s.replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function finish(){
+ S.mode="end";$("panel").classList.add("hide");
+ const a=S.alt,rank=a<1000?"Ground crew":a<5000?"Weather balloon":a<20000?"Jet pilot":a<100000?"Stratosphere surfer":"Astronaut";
+ $("end").innerHTML=`<h1 style="font-size:34px">${rank.toUpperCase()}</h1><p class="sub">FLIGHT COMPLETE</p>
+ <div class="stat">FINAL ALTITUDE<b>${fmt(a)}</b></div><div class="stat">SCORE<b>${S.score}</b></div>
+ <div class="stat">HIGHEST LANDMARK<b style="font-size:18px">${S.maxM?S.maxM[1]:"none yet"}</b></div>
+ <div class="stat">BEST EVER<b>${fmt(best)}</b></div>
+ <button class="btn big" id="again" style="margin-top:18px">&#9650; CLIMB AGAIN &#9650;</button>`;
+ $("end").classList.remove("hide");showBest();
+ $("again").onclick=()=>start(Date.now());
+}
+$("go").onclick=()=>start(Date.now());
+$("daily").onclick=()=>{const d=new Date();start(d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate())};
+$("launch").onclick=submit;
+$("cn").onclick=()=>{const p=S.pend;clearPend();finalize(null,p.raw,false)};
+$("in").addEventListener("input",()=>{if(S&&S.pend)clearPend()});
+$("in").addEventListener("keydown",e=>{if(e.key==="Enter")submit()});
+// ---------- rendering ----------
+const cv=$("c"),ctx=cv.getContext("2d");let W=180,H=360;const K=16;
+function resize(){const r=cv.getBoundingClientRect();const px=Math.min(Math.max(r.width,1),560)/180;W=Math.round(r.width/px);H=Math.max(200,Math.round(r.height/px));cv.width=W;cv.height=H;ctx.imageSmoothingEnabled=false}
+addEventListener("resize",resize);resize();
+const R=(x,y,w,h,c)=>{ctx.fillStyle=c;ctx.fillRect(x|0,y|0,w|0,h|0)};
+const Y=h=>K*Math.log(1+h/40);
+const stops=[[0,[108,192,236]],[3000,[70,140,210]],[15000,[22,44,104]],[60000,[7,12,38]],[160000,[0,0,10]]];
+function sky(a){a=Math.max(0,a);for(let i=1;i<stops.length;i++){if(a<=stops[i][0]){const[a0,c0]=stops[i-1],[a1,c1]=stops[i];const t=(Math.log(1+a)-Math.log(1+a0))/(Math.log(1+a1)-Math.log(1+a0));return c0.map((v,j)=>Math.round(v+(c1[j]-v)*t))}}return stops[4][1]}
+const rs=rng(7);
+const stars=Array.from({length:180},()=>[rs(),rs()*500,rs()]);
+const FAR=[[-140,5200,80,"fuji"],[-95,2600,60,"fuji"],[-60,6500,70,"ev"],[95,4300,64,"fuji"],[125,7000,84,"ev"],[170,2400,60,"fuji"],[-230,3000,64,"fuji"],[-280,6000,80,"ev"],[230,5000,70,"fuji"],[290,2200,56,"fuji"],[-70,600,12,"burj"],[-120,420,14,"wtc"],[110,380,12,"wtc"],[150,700,12,"burj"],[-170,250,14,"eif"],[-200,500,12,"burj"],[200,600,12,"wtc"],[260,350,14,"wtc"],[-260,420,12,"burj"]];
+const clouds=Array.from({length:90},()=>[Math.exp(rs()*Math.log(14000))+150,rs(),.6+rs()]);
+function tower(x,hm,w,type,A,RY){
+ const top=RY-(Y(hm)-Y(A)),base=RY+Y(A);if(base<0||top>H)return;
+ const th=base-top;
+ for(let y=Math.max(0,Math.floor(top));y<Math.min(H,base);y++){
+  const f=(y-top)/th;let ww,c="#243756";
+  if(type==="wtc"){ww=f<.14?1+f*4:w*(.7+.3*Math.min(1,f*3));c="#2b4166"}
+  else if(type==="eif"){ww=Math.max(1,w*(.12+.88*Math.pow(f,1.7)));c="#3a2f3f"}
+  else if(type==="burj"){ww=Math.max(1,w*(.1+.9*Math.pow(f,.7)));ww=Math.ceil(ww/3)*3;c="#33506f"}
+  else{ww=w*f;c=f<.22?"#eaf2ff":(type==="fuji"?"#3b4f78":"#4a566e")}
+  R(x-ww/2,y,ww,1,c);if(type!=="fuji"&&type!=="ev"&&((y*7)%11<2))R(x-ww/2+1,y,1,1,"#ffd98a");
+ }
+}
+function draw(now){
+ const A=S?S.alt:0,RY=Math.round(H*.46),rx=Math.round(W/2-36),cx=W/2;
+ const t0=sky(A*1.8+200),t1=sky(A*.6);const N=24;
+ for(let i=0;i<N;i++){const f=i/(N-1);R(0,i*H/N,W,H/N+1,`rgb(${t0.map((v,j)=>Math.round(v+(t1[j]-v)*f)).join(",")})`)}
+ const sa=Math.min(1,Math.max(0,(Math.log(1+A)-Math.log(1+4000))/(Math.log(1+50000)-Math.log(1+4000))));
+ if(sa>0)for(const s of stars){if(s[1]>H)continue;ctx.globalAlpha=sa*(.4+.6*Math.abs(Math.sin(now/600+s[2]*20)));R(s[0]*W,s[1],1,1,"#fff")}
+ ctx.globalAlpha=1;
+ if(A<16000)for(const c of clouds){const y=RY-(Y(c[0])-Y(A));if(y<-6||y>H)continue;ctx.globalAlpha=Math.min(1,(16000-A)/6000)*.9;const x=c[1]*W;R(x,y,18*c[2],3,"#fff");R(x+3,y-2,10*c[2],2,"#fff");R(x+8,y+3,12*c[2],1,"#dce9f7")}
+ ctx.globalAlpha=1;
+ for(const s of FAR)tower(cx+s[0],s[1],s[2],s[3],A,RY);tower(cx+50,8849,92,"ev",A,RY);tower(cx+9,3776,70,"fuji",A,RY);
+ tower(cx+77,324,16,"eif",A,RY);tower(cx,541,12,"wtc",A,RY);tower(cx+36,828,12,"burj",A,RY);
+ const gy=RY+Y(A);
+ if(gy<H){R(0,gy,W,H-gy+1,"#1b3b2c");R(0,gy,W,2,"#2f6b46");R(rx-10,gy,20,2,"#667")}
+ // altitude ruler
+ R(W-4,0,1,H,"rgba(255,255,255,.25)");
+ for(const m of M){const y=RY-(Y(m[0])-Y(A));if(y>0&&y<H)R(W-7,y,5,1,"#fff")}
+ // rocket
+ const fly=S&&S.mode==="fly";const sh=fly?(Math.random()-.5)*1.2:0,x=Math.round(rx+sh);
+ if(fly){const l=5+Math.random()*7;R(x-2,RY-2,4,l,"#ffb23c");R(x-1,RY-2,2,l*.6,"#fff2a0")}
+ R(x-1,RY-21,2,2,"#ff4f7b");R(x-2,RY-19,4,2,"#ff4f7b");R(x-3,RY-17,6,13,"#e8eefc");R(x-3,RY-17,1,13,"#b7c4e0");
+ R(x-1,RY-13,2,3,"#4cd6ff");R(x-3,RY-8,6,1,"#ff4f7b");R(x-5,RY-7,2,6,"#ff4f7b");R(x+3,RY-7,2,6,"#ff4f7b");R(x-2,RY-4,4,2,"#555");
+}
+let last=performance.now();
+function loop(now){
+ const dt=(now-last)/1000;last=now;
+ if(S){
+  if(S.mode==="fly"&&S.fly){const t=Math.min(1,(now-S.fly.t0)/S.fly.dur),e=t<.5?2*t*t:1-Math.pow(-2*t+2,2)/2;S.alt=S.from+(S.target-S.from)*e;if(t>=1)arrive()}
+  if(S.mode==="ask"){S.tLeft-=dt;if(S.tLeft<=0){S.tLeft=0;timeout()}
+   const s=Math.ceil(S.tLeft);$("tm").textContent=s;$("ring").style.setProperty("--p",S.tLeft/30*100)}
+  $("alt").textContent=fmt(S.alt);$("sc").textContent=S.score;
+ }
+ draw(now);requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,9 @@
+{
+  "name": "pixel-ascent",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "find": "node scripts/build-db.mjs --find",
+    "build:db": "node scripts/build-db.mjs"
+  }
+}
