@@ -43,6 +43,19 @@ input:focus{border-color:var(--cy)}input::placeholder{color:#556487}
 .fact{border-left:4px solid var(--cy);padding:4px 0 4px 12px;margin:10px 0 14px;font-size:14px;line-height:1.55;letter-spacing:.04em}
 .fact b{display:block;color:var(--cy);margin-bottom:2px}
 #menu,#end{position:absolute;inset:0;z-index:6;display:flex;flex-direction:column;justify-content:flex-end;padding:20px max(12px,calc((100% - 540px)/2)) calc(env(safe-area-inset-bottom,0px) + 20px);background:linear-gradient(180deg,rgba(6,12,28,.1),rgba(6,12,28,.88) 55%)}
+#catpage{position:absolute;inset:0;z-index:8;background:#0b0a0a;overflow-y:auto;padding:calc(env(safe-area-inset-top,0px) + 18px) 14px 24px;-webkit-overflow-scrolling:touch}
+.cp-h{font-size:12px;letter-spacing:.3em;color:var(--pk);margin:4px 2px 14px}
+.cp-card{background:#1a100c;border:3px solid #3a2418;margin-bottom:14px;cursor:pointer;color:#f1e6dc}
+.cp-card:active{transform:translateY(2px)}
+.cp-b{height:130px;position:relative;border-bottom:2px solid #3a2418}
+.cp-map{position:absolute;inset:0;background-image:linear-gradient(rgba(255,255,255,.07) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.07) 1px,transparent 1px);background-size:20px 20px}
+.cp-pin{position:absolute;width:12px;height:12px;background:#ff7a3d;box-shadow:0 0 0 4px rgba(255,122,61,.35),0 0 14px #ff7a3d;transform:translate(-50%,-50%)}
+.cp-place{position:absolute;left:12px;bottom:10px;font-size:11px;letter-spacing:.2em;color:#f1e6dc;background:rgba(10,6,4,.7);padding:4px 8px;border-left:3px solid #ff7a3d}
+.cp-tag{position:absolute;top:10px;right:10px;border:2px solid #ff7a3d;color:#ff7a3d;font-size:10px;letter-spacing:.2em;padding:4px 8px;background:rgba(10,6,4,.7)}
+.cp-i{padding:12px 14px 14px}
+.cp-t{font-size:20px;letter-spacing:.08em;margin-bottom:6px}
+.cp-s{font-size:11px;letter-spacing:.12em;color:#a89080;margin-bottom:12px}
+.cp-go{font-size:12px;letter-spacing:.2em;color:#ff7a3d;text-align:right}
 h1{font-size:44px;line-height:1;margin:0 0 6px;letter-spacing:.06em;color:#fff;text-shadow:3px 3px 0 var(--pk)}
 .sub{font-size:12px;letter-spacing:.18em;color:var(--dim);margin:0 0 22px;line-height:1.7}
 .stat{display:flex;justify-content:space-between;font-size:13px;letter-spacing:.1em;padding:8px 0;border-bottom:2px solid #1c2b4a}.stat b{color:var(--cy);font-family:'VT323',monospace;font-size:24px;font-weight:400}
@@ -62,7 +75,7 @@ h1{font-size:44px;line-height:1;margin:0 0 6px;letter-spacing:.06em;color:#fff;t
  <h1>PIXEL<br>ASCENT</h1>
  <p class="sub">NAME THINGS. RARER ANSWERS<br>BLAST YOU HIGHER.</p>
  <button class="btn big" id="go">&#9650; BEGIN ASCENT &#9650;</button>
- <button class="btn alt" id="daily">TODAY’S CLIMB</button>
+ <div id="cats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px"></div>
  <div class="hint" style="margin-top:14px;text-align:center" id="best"></div>
 </div>
 <div id="panel" class="hide">
@@ -80,21 +93,24 @@ h1{font-size:44px;line-height:1;margin:0 0 6px;letter-spacing:.06em;color:#fff;t
  </div>
  <div class="card hide" id="res"></div>
 </div>
+<div id="catpage" class="hide"></div>
 <div id="end" class="hide"></div>
 </div>
 <script>
 // ---------- DATA: tiers = common | uncommon | rare | epic | legendary ----------
 const P=[
-["Name a noodle dish","spaghetti,ramen,pad thai,lo mein,chicken noodle soup,mac and cheese,fettuccine alfredo|pho,udon,soba,chow mein,lasagna,carbonara,dan dan noodles,penne,tortellini,ravioli,spaghetti bolognese|laksa,pad see ew,japchae,tonkotsu ramen,yakisoba,bun bo hue,cacio e pepe,jajangmyeon,tantanmen,naengmyeon,mie goreng,char kway teow|khao soi,biang biang noodles,lagman,pancit canton,mohinga,kuy teav,kal guksu,pastitsio,pancit palabok|ash reshteh,cao lau,mi quang,banh canh,kluski,shiratake"],
 ["Name a programming language","python,javascript,java,c,c++|rust,go,ruby,php,swift,kotlin,typescript,c#,sql,lua,perl,r|haskell,elixir,scala,clojure,erlang,ocaml,julia,dart,fortran,cobol,lisp,zig,nim,crystal|prolog,forth,smalltalk,ada,racket,f#,scheme,d,apl,assembly|holyc,brainfuck,malbolge,befunge,intercal,whitespace,piet,lolcode,arnoldc,shakespeare"],
 ["Name a country in Africa","egypt,nigeria,south africa,kenya,morocco,ethiopia,ghana|algeria,tanzania,uganda,senegal,tunisia,libya,sudan,angola,zimbabwe,zambia,cameroon|mali,niger,chad,namibia,botswana,mozambique,madagascar,rwanda,somalia,malawi,benin,togo,mauritania|gabon,gambia,lesotho,eritrea,djibouti,burundi,liberia,sierra leone,guinea,burkina faso,mauritius,congo,democratic republic of the congo,south sudan,ivory coast|eswatini,swaziland,comoros,cabo verde,cape verde,seychelles,sao tome and principe,equatorial guinea,guinea bissau"],
-["Name an animal that lives in the ocean","shark,dolphin,whale,octopus,jellyfish,turtle,seal|orca,stingray,seahorse,starfish,crab,lobster,squid,clownfish,manta ray,sea lion,walrus,eel,pufferfish|narwhal,manatee,sunfish,anglerfish,nautilus,cuttlefish,barracuda,sea urchin,sea cucumber,moray eel,dugong,sea otter,lionfish|vampire squid,hagfish,giant isopod,oarfish,blobfish,goblin shark,dumbo octopus,sea pig,pyjama squid|barreleye fish,yeti crab,pom pom crab,sarcastic fringehead,sea angel,siphonophore,sea butterfly,glaucus atlanticus,bobbit worm,hairy frogfish"],
 ["Name a board or card game","monopoly,chess,checkers,uno,scrabble,poker,clue,risk,go fish|catan,settlers of catan,ticket to ride,carcassonne,pandemic,backgammon,bridge,cribbage,mahjong,codenames,battleship,sorry|azul,wingspan,splendor,dominion,agricola,go,gloomhaven,terraforming mars,7 wonders,seven wonders,hanabi,patchwork,dixit,king of tokyo|twilight imperium,spirit island,brass birmingham,root,scythe,eclipse,arkham horror,through the ages,puerto rico,great western trail|hnefatafl,senet,shogi,xiangqi,tak,rithmomachia,royal game of ur,fanorona,tafl"],
 ["Name a planet, moon or dwarf planet","mars,earth,jupiter,saturn,venus,mercury,neptune,uranus,pluto,moon|titan,europa,io,ganymede,callisto,enceladus,triton,ceres|phobos,deimos,charon,eris,makemake,haumea,mimas,iapetus,rhea,dione,tethys,oberon,titania|miranda,ariel,umbriel,hyperion,phoebe,nereid,proteus,sedna,quaoar,orcus,gonggong|amalthea,himalia,thebe,puck,larissa,despina,pan,atlas,prometheus,pandora,janus,epimetheus,helene,telesto,calypso,arrokoth,ixion,varuna"],
-["Name something in a toolbox","hammer,screwdriver,wrench,pliers,tape measure,nails,screws,saw|level,drill,utility knife,allen key,socket set,chisel,file,clamp,sandpaper,duct tape,wire stripper|torque wrench,hacksaw,mallet,crowbar,vice grips,stud finder,plumb bob,center punch,rasp,putty knife,tin snips,multimeter|spokeshave,bevel gauge,marking gauge,scratch awl,flush cut saw,tap and die,feeler gauge,cold chisel,reamer|adze,drawknife,froe,brace and bit,scorp,inshave,dividers"],
 ["Name a musical instrument","guitar,piano,drums,violin,flute,trumpet,saxophone,bass,clarinet|cello,harp,trombone,ukulele,banjo,accordion,harmonica,oboe,xylophone,tuba,mandolin|bassoon,sitar,didgeridoo,bagpipes,theremin,marimba,french horn,zither,glockenspiel,kalimba,djembe,oud,erhu,synthesizer|hurdy gurdy,nyckelharpa,hammered dulcimer,shamisen,duduk,ocarina,glass armonica,balalaika,tabla,santur,kora,mbira,cimbalom|serpent,ondes martenot,hang drum,hardanger fiddle,cristal baschet,waterphone,sackbut,crwth,lithophone,sarrusophone,theorbo"],
 ["Name a dinosaur","t rex,trex,tyrannosaurus rex,tyrannosaurus,triceratops,velociraptor,stegosaurus,brontosaurus|brachiosaurus,diplodocus,spinosaurus,ankylosaurus,allosaurus,iguanodon,parasaurolophus,pachycephalosaurus|carnotaurus,giganotosaurus,dilophosaurus,compsognathus,gallimimus,therizinosaurus,utahraptor,deinonychus,argentinosaurus,microraptor|kentrosaurus,ouranosaurus,albertosaurus,baryonyx,amargasaurus,sinosauropteryx,oviraptor,corythosaurus,styracosaurus,mamenchisaurus|nasutoceratops,qianzhousaurus,yutyrannus,halszkaraptor,nanuqsaurus,kosmoceratops,irritator,tsintaosaurus,zuul,pegomastax"]
 ];
+const TAG={"Name a musical instrument":"music","Name a band":"music","Name an album":"music","Name a song":"music","Name a music genre":"music","Name a record label":"music","Name an opera":"music","Name a stage musical":"music","Name a symphony":"music","Name a music festival":"music","Name a concert hall":"music","Name a music video":"music","Name a rock band":"music","Name an orchestra":"music","Name a national anthem":"music",
+"Name a film":"film","Name a TV show":"film","Name a film franchise":"film","Name a film genre":"film","Name a film studio":"film","Name an animated film":"film","Name a documentary":"film","Name a sitcom":"film","Name a film festival":"film","Name a movie theater":"film","Name a horror film":"film","Name a sci-fi film":"film","Name a TV channel":"film","Name a miniseries":"film","Name a comedy film":"film",
+"Name a programming language":"tech","Name a computer company":"tech","Name an operating system":"tech","Name a web browser":"tech","Name a social media platform":"tech","Name a video game console":"tech","Name a search engine":"tech","Name a smartphone":"tech","Name a game engine":"tech","Name a Linux distro":"tech","Name a file format":"tech","Name a robot":"tech","Name a spacecraft":"tech","Name a website":"tech","Name a mobile app":"tech",
+"Name a video game":"pop","Name a superhero":"pop","Name a comic book character":"pop","Name a Pokémon":"pop","Name an anime":"pop","Name a toy":"pop","Name a manga":"pop","Name a video game character":"pop","Name a cartoon":"pop","Name a theme park":"pop","Name a meme":"pop","Name a video game series":"pop","Name a magazine":"pop","Name a fictional universe":"pop","Name a roller coaster":"pop"};
+const CATS=[["ALL",null],["MUSIC","music"],["FILM & TV","film"],["TECHNOLOGY","tech"],["POP CULTURE","pop"]];
 const TIERS=[
  {n:"COMMON",g:150,p:10,c:"#9fb2d6"},{n:"UNCOMMON",g:450,p:30,c:"#6be28a"},{n:"RARE",g:1400,p:100,c:"#4cd6ff"},
  {n:"EPIC",g:4000,p:300,c:"#c58bff"},{n:"LEGENDARY",g:12000,p:1000,c:"#ffcf5a"}];
@@ -130,18 +146,18 @@ let S=null,best=0;
 try{best=+localStorage.getItem("pa_best")||0}catch(e){}
 function showBest(){$("best").textContent=best?"BEST ALTITUDE "+fmt(best):""}showBest();
 const pips=$("pips");for(let i=0;i<7;i++)pips.appendChild(document.createElement("i"));
-function start(seed){
- const r=rng(seed),a=P.map((_,i)=>i);
+function start(seed,tag){
+ const r=rng(seed);let a=P.map((_,i)=>i).filter(i=>!tag||TAG[P[i][0]]===tag);if(!a.length){tag=null;a=P.map((_,i)=>i)}
  for(let i=a.length-1;i>0;i--){const j=Math.floor(r()*(i+1));[a[i],a[j]]=[a[j],a[i]]}
- S={order:a.slice(0,7),i:0,alt:0,score:0,mode:"ask",used:new Set(),tLeft:30,fly:null,maxM:null,from:0};
- $("menu").classList.add("hide");$("end").classList.add("hide");$("panel").classList.remove("hide");
+ S={tag,order:a.slice(0,5),i:0,alt:0,score:0,mode:"ask",used:new Set(),tLeft:30,fly:null,maxM:null,from:0};
+ [...pips.children].forEach((p,i)=>p.style.display=i<S.order.length?"":"none");$("menu").classList.add("hide");$("end").classList.add("hide");$("panel").classList.remove("hide");
  nextPrompt();
 }
 function nextPrompt(){
  const idx=S.order[S.i];S.cur=idx;S.used=new Set();S.tLeft=30;S.mode="ask";clearPend();
- $("ey").textContent="PROMPT "+(S.i+1)+" OF 7";$("q").textContent=P[idx][0];
+ $("ey").textContent="PROMPT "+(S.i+1)+" OF "+S.order.length;$("q").textContent=P[idx][0];
  $("ask").classList.remove("hide");$("res").classList.add("hide");$("in").value="";$("msg").textContent="";
- $("pl").textContent="PROMPT "+(S.i+1)+" OF 7";
+ $("pl").textContent="PROMPT "+(S.i+1)+" OF "+S.order.length;
  [...pips.children].forEach((p,i)=>p.className=i<S.i?"done":i==S.i?"on":"");
  setTimeout(()=>$("in").focus({preventScroll:true}),50);
 }
@@ -171,7 +187,7 @@ function arrive(){
  if(S.alt>best){best=S.alt;try{localStorage.setItem("pa_best",String(Math.round(best)))}catch(e){}}
  let m=null;for(const x of M)if(x[0]>S.from&&x[0]<=S.alt)m=x;
  if(m&&(!S.maxM||m[0]>S.maxM[0]))S.maxM=m;
- const last=S.i>=6,t=S.tier;
+ const last=S.i>=S.order.length-1,t=S.tier;
  let h;
  if(S.raw===null){
   const le=ENT[S.cur].filter(e=>e.t===4),ls=[le.length?le[Math.floor(Math.random()*le.length)].n:"???"];
@@ -195,10 +211,31 @@ function finish(){
  <div class="stat">BEST EVER<b>${fmt(best)}</b></div>
  <button class="btn big" id="again" style="margin-top:18px">&#9650; CLIMB AGAIN &#9650;</button>`;
  $("end").classList.remove("hide");showBest();
- $("again").onclick=()=>start(Date.now());
+ $("again").onclick=()=>start(Date.now(),S.tag);
 }
 $("go").onclick=()=>start(Date.now());
-$("daily").onclick=()=>{const d=new Date();start(d.getFullYear()*10000+(d.getMonth()+1)*100+d.getDate())};
+const CARDS=[
+ {tag:null,place:"THE WORLD",px:50,py:50,t:"ALL",s:"every expedition, every kind of answer",bg:"linear-gradient(180deg,#0b1d3a,#2c5d8f 62%,#1b3b2c 62%)"},
+ {tag:"music",place:"NASHVILLE, TN",px:62,py:52,t:"MUSIC",s:"instruments, bands, albums and songs",bg:"linear-gradient(180deg,#2a0f3d,#7a2a6b 62%,#140818 62%)"},
+ {tag:"film",place:"HOLLYWOOD STUDIOS",px:17,py:55,t:"FILM & TV",s:"films and shows, from the reel to the screen",bg:"linear-gradient(180deg,#1a0d0d,#8c3a1e 62%,#1a0d0d 62%)"},
+ {tag:"tech",place:"SILICON VALLEY, CA",px:15,py:60,t:"TECHNOLOGY",s:"languages and the companies that build them",bg:"linear-gradient(180deg,#06202a,#0f5a6e 62%,#06141a 62%)"},
+ {tag:"pop",place:"TOKYO, JP",px:86,py:50,t:"POP CULTURE",s:"games, heroes and the comics they came from",bg:"linear-gradient(180deg,#2a1a00,#e0a030 62%,#2a1a00 62%)"}
+];
+function openCats(){
+ const pg=$("catpage");pg.innerHTML="";
+ const head=document.createElement("div");head.className="cp-h";head.textContent="CHOOSE A CATEGORY";pg.appendChild(head);
+ for(const c of CARDS){
+  const n=c.tag?P.filter(p=>TAG[p[0]]===c.tag).length:P.length;
+  const card=document.createElement("div");card.className="cp-card";
+  card.innerHTML='<div class="cp-b" style="background:'+c.bg+'"><div class="cp-map"></div><div class="cp-pin" style="left:'+c.px+'%;top:'+c.py+'%"></div><div class="cp-place">'+c.place+'</div><span class="cp-tag">'+(n?n+' QUESTIONS':'NO QUESTIONS YET')+'</span></div><div class="cp-i"><div class="cp-t">'+c.t+'</div><div class="cp-s">'+c.s+'</div><div class="cp-go">SELECT \u2192</div></div>';
+  card.onclick=()=>{if(!n)return;pg.classList.add("hide");start(Date.now(),c.tag)};if(!n)card.style.opacity=.5;
+  pg.appendChild(card);
+ }
+ const back=document.createElement("button");back.className="btn alt";back.textContent="\u2190 BACK";back.onclick=()=>pg.classList.add("hide");pg.appendChild(back);
+ pg.classList.remove("hide");
+}
+const catBtn=document.createElement("button");catBtn.className="btn alt";catBtn.style.margin="0";catBtn.style.gridColumn="1 / -1";catBtn.textContent="CATEGORIES \u2192";catBtn.onclick=openCats;
+$("cats").appendChild(catBtn);
 $("launch").onclick=submit;
 $("cn").onclick=()=>{const p=S.pend;clearPend();$("msg").textContent='"'+p.raw.toUpperCase()+'": not on the list. try again'};
 $("in").addEventListener("input",()=>{if(S&&S.pend)clearPend()});
@@ -213,6 +250,13 @@ const stops=[[0,[108,192,236]],[3000,[70,140,210]],[15000,[22,44,104]],[60000,[7
 function sky(a){a=Math.max(0,a);for(let i=1;i<stops.length;i++){if(a<=stops[i][0]){const[a0,c0]=stops[i-1],[a1,c1]=stops[i];const t=(Math.log(1+a)-Math.log(1+a0))/(Math.log(1+a1)-Math.log(1+a0));return c0.map((v,j)=>Math.round(v+(c1[j]-v)*t))}}return stops[4][1]}
 const rs=rng(7);
 const stars=Array.from({length:180},()=>[rs(),rs()*500,rs()]);
+let BC="#243756";
+const THEME={
+ music:{top:[58,34,86],hor:[236,130,92],bc:"#2d1f42",objs:[[-70,150,10,"bld"],[-56,230,12,"bld"],[-30,190,14,"batman"],[-8,25,34,"parthenon"],[14,260,12,"bld"],[28,120,12,"guitar"],[62,12,36,"truss"]]},
+ film:{top:[58,86,150],hor:[255,214,120],sun:[26,260],tint:["#ffb84d",.12],bc:"#3a2a2a",objs:[[-74,700,70,"hill"],[-22,920,90,"hill"],[46,620,64,"hill"],[-22,140,36,"sign"],[22,420,16,"searchlight"],[30,420,-16,"searchlight"],[-70,40,40,"stage"],[-22,60,16,"wtower"],[2,36,28,"stage"],[40,70,16,"camera"],[70,90,22,"marquee"],[-52,40,0,"palm"],[18,40,0,"palm"],[86,40,0,"palm"]]},
+ tech:{top:[18,66,116],hor:[128,206,236],bc:"#2c3e5c",objs:[[50,227,52,"bridge"],[-72,240,14,"bld"],[-54,380,12,"bld"],[-36,220,16,"bld"],[-16,450,12,"spire"],[-2,260,14,"pyramid"],[10,240,12,"bld"],[80,320,10,"bld"]]},
+ pop:{top:[28,18,58],hor:[206,86,140],bc:"#2a1a3a",objs:[[30,3776,76,"fuji"],[-76,180,12,"bld"],[-60,250,14,"bld"],[-52,55,20,"pagoda"],[-30,333,16,"ttower"],[-14,200,12,"bld"],[12,634,8,"skytree"],[36,28,14,"torii"],[50,260,12,"bld"],[66,180,12,"bld"],[78,250,10,"bld"]]}
+};
 const FAR=[[-140,5200,80,"fuji"],[-95,2600,60,"fuji"],[-60,6500,70,"ev"],[95,4300,64,"fuji"],[125,7000,84,"ev"],[170,2400,60,"fuji"],[-230,3000,64,"fuji"],[-280,6000,80,"ev"],[230,5000,70,"fuji"],[290,2200,56,"fuji"],[-70,600,12,"burj"],[-120,420,14,"wtc"],[110,380,12,"wtc"],[150,700,12,"burj"],[-170,250,14,"eif"],[-200,500,12,"burj"],[200,600,12,"wtc"],[260,350,14,"wtc"],[-260,420,12,"burj"]];
 const clouds=Array.from({length:90},()=>[Math.exp(rs()*Math.log(14000))+150,rs(),.6+rs()]);
 function tower(x,hm,w,type,A,RY){
@@ -223,23 +267,44 @@ function tower(x,hm,w,type,A,RY){
   if(type==="wtc"){ww=f<.14?1+f*4:w*(.7+.3*Math.min(1,f*3));c="#2b4166"}
   else if(type==="eif"){ww=Math.max(1,w*(.12+.88*Math.pow(f,1.7)));c="#3a2f3f"}
   else if(type==="burj"){ww=Math.max(1,w*(.1+.9*Math.pow(f,.7)));ww=Math.ceil(ww/3)*3;c="#33506f"}
-  else{ww=w*f;c=f<.22?"#eaf2ff":(type==="fuji"?"#3b4f78":"#4a566e")}
-  R(x-ww/2,y,ww,1,c);if(type!=="fuji"&&type!=="ev"&&((y*7)%11<2))R(x-ww/2+1,y,1,1,"#ffd98a");
+  else if(type==="bld"){ww=w;c=BC}else if(type==="pyramid"){ww=Math.max(1,w*(1-f));c=BC}else if(type==="spire"){ww=Math.max(1,w*(1-f*.7));c=BC}else if(type==="lattice"){ww=Math.max(1,w*(1-f*.6));c=BC}else if(type==="hill"){ww=w*f;c="#4a6b3a"}else{ww=w*f;c=f<.22?"#eaf2ff":(type==="fuji"?"#3b4f78":"#4a566e")}
+  R(x-ww/2,y,ww,1,c);if(type!=="fuji"&&type!=="ev"&&type!=="hill"&&type!=="lattice"&&((y*7)%11<2))R(x-ww/2+1,y,1,1,"#ffd98a");
  }
 }
+const NEWLM=["batman","parthenon","guitar","truss","ttower","skytree","pagoda","torii","stage","wtower","camera","searchlight","palm","marquee"];
+function LM(type,x,hm,w,A,RY){const base=Math.round(RY+Y(A)),top=Math.round(RY-(Y(hm)-Y(A))),th=base-top;if(base<0||top>H||th<2)return;x=Math.round(x);const y0=Math.max(0,top),y1=Math.min(H,base);
+ if(type==="batman"){for(let y=y0;y<y1;y++){const f=(y-top)/th;if(f<.28){const o=Math.round(w*.3);R(x-o-1,y,2,1,"#1d2a44");R(x+o-1,y,2,1,"#1d2a44")}else{R(x-w/2,y,w,1,"#2a3a5c");if((y*7)%11<2)R(x-w/2+2,y,1,1,"#ffd98a")}}}
+ else if(type==="parthenon"){const l=x-w/2;for(let r=0;r<4;r++)R(x-(w*(.3+.7*r/3))/2,top-3+r,w*(.3+.7*r/3),1,"#e8dcc4");R(l,top+1,w,1,"#e8dcc4");for(let c=0;c<8;c++)R(l+c*(w-1)/7,top+2,1,Math.max(1,th-3),"#cfc4b0");R(l-1,base-1,w+2,1,"#e8dcc4")}
+ else if(type==="guitar"){const C="#ff6ec7",bt=base-th*.4;R(x-1,top,3,3,C);R(x,top+3,1,Math.max(1,bt-top-3),C);for(let y=Math.floor(bt);y<y1;y++){const f=(y-bt)/(th*.4),ww=f<.4?5+f*10:(f<.55?8:9+(f-.55)*7);R(x-ww/2,y,ww,1,C)}R(x-1,base-th*.14,3,2,"#2a0f3d")}
+ else if(type==="truss"){const x1=x-w/2;R(x1,top,w,2,"#6a6a78");for(let p=0;p<=w;p++){const u=p/w,yy=top-9*(1-(2*u-1)*(2*u-1));R(x1+p,yy,1,1,"#9a8f86");if(p%4===0)R(x1+p,yy,1,top-yy,"#7a7068")}R(x1,top,2,base-top,"#555");R(x+w/2-2,top,2,base-top,"#555")}
+ else if(type==="ttower"){for(let y=y0;y<y1;y++){const f=(y-top)/th,ww=Math.max(1,Math.round(w*(.06+.94*Math.pow(f,1.25))));R(x-ww/2,y,ww,1,((y>>1)&1)?"#f4ede4":"#e8562d");if((y*5)%9<2&&ww>4)R(x-ww/2+1,y,ww-2,1,"#3a2330")}R(x-w*.2-2,top+th*.36,w*.4+4,2,"#f4ede4");R(x-w*.12-1,top+th*.14,w*.24+2,2,"#f4ede4");R(x,top-4,1,4,"#e8562d")}
+ else if(type==="skytree"){for(let y=y0;y<y1;y++){const f=(y-top)/th,ww=Math.max(1,Math.round(1+(w-1)*Math.pow(f,.9)));R(x-ww/2,y,ww,1,"#b8c8e0")}R(x-4,top+th*.5,9,3,"#dfe8f5");R(x-3,top+th*.66,7,2,"#dfe8f5");R(x,top-5,1,5,"#b8c8e0")}
+ else if(type==="pagoda"){const s=th/5;for(let t=0;t<5;t++){const rw=w*(1-t*.15),yy=top+t*s;R(x-rw/2,yy,rw,1,"#7a2d2d");R(x-rw/2-1,yy+1,rw+2,1,"#5a1f1f");R(x-rw*.32,yy+2,rw*.64,Math.max(1,s-2),"#c9573a")}R(x,top-3,1,3,"#e8c070")}
+ else if(type==="torii"){const l=x-w/2;R(l+2,top,2,th,"#d2412a");R(x+w/2-4,top,2,th,"#d2412a");R(l-1,top,w+2,2,"#d2412a");R(l+1,top+4,w-2,1,"#d2412a")}
+ else if(type==="stage"){const l=x-w/2,dh=Math.max(3,Math.round(th*.6)),dw=Math.round(w*.3);R(l,top+2,w,th-2,"#6b5a52");R(l+3,top+1,w-6,1,"#8a766b");R(l+6,top,w-12,1,"#8a766b");R(l,top+2,w,1,"#8a766b");R(x-dw/2,base-dh,dw,dh,"#2a1f1c");R(x-dw/2,base-dh,dw,1,"#ffb23c");if(th>8)for(let i=0;i<w-4;i+=5)R(l+2+i,top+4,1,1,"#ffd98a")}
+ else if(type==="wtower"){const l=x-w/2,tk=Math.max(3,Math.round(th*.4));R(x-1,top,2,1,"#6a4a30");R(x-w*.35,top+1,w*.7,1,"#6a4a30");R(l,top+2,w,1,"#6a4a30");R(l,top+3,w,tk,"#9c7a56");R(l,top+3+tk*.5,w,1,"#6a4a30");const ly=top+3+tk;R(l+1,ly,1,base-ly,"#4a3a2c");R(x,ly,1,base-ly,"#4a3a2c");R(l+w-2,ly,1,base-ly,"#4a3a2c");R(l+1,base-(base-ly)*.4,w-2,1,"#4a3a2c")}
+ else if(type==="camera"){R(x-2,base-3,5,3,"#444");R(x,top+3,1,base-top-3,"#555");const ay=top+th*.4;for(let i=0;i<=w;i++)R(x+i,ay-(ay-top-1)*i/w,1,1,"#666");R(x+w-2,top-1,6,4,"#222");R(x+w-1,top-3,4,2,"#333");R(x+w+4,top,2,2,"#9ad")}
+ else if(type==="searchlight"){ctx.globalAlpha=.16;ctx.fillStyle="#fff";ctx.beginPath();ctx.moveTo(x-1,base);ctx.lineTo(x+w-4,top);ctx.lineTo(x+w+4,top);ctx.lineTo(x+1,base);ctx.closePath();ctx.fill();ctx.globalAlpha=1;R(x-2,base-2,4,2,"#444")}
+ else if(type==="palm"){R(x,top+1,1,Math.max(1,base-top-1),"#6a4a30");R(x-4,top,9,1,"#2f6b3a");R(x-3,top+1,7,1,"#2f6b3a");R(x-5,top+1,2,1,"#2f6b3a");R(x+4,top+1,2,1,"#2f6b3a")}
+ else if(type==="marquee"){const G2={F:["111","100","110","100","100"],I:["111","010","010","010","111"],L:["100","100","100","100","111"],M:["101","111","111","101","101"]},l=Math.round(x-w/2);R(x,top+9,1,Math.max(1,base-top-9),"#444");R(l,top,w,10,"#6b1d2a");for(let i=0;i<w;i+=2){R(l+i,top,1,1,"#ffd98a");R(l+i,top+9,1,1,"#ffd98a")}let px=l+3;for(const ch of "FILM"){const g=G2[ch];for(let r=0;r<5;r++)for(let c=0;c<3;c++)if(g[r][c]==="1")R(px+c,top+2+r,1,1,"#ffe9a8");px+=4}}
+}
+function drawSign(x,hm,A,RY){const G={H:["101","101","111","101","101"],O:["111","101","101","101","111"],L:["100","100","100","100","111"],Y:["101","101","010","010","010"],W:["101","101","111","111","101"],D:["110","101","101","101","110"]};const y=Math.round(RY-(Y(hm)-Y(A)));if(y<-8||y>H)return;let px=Math.round(x-18);for(const ch of "HOLLYWOOD"){const g=G[ch];for(let r=0;r<5;r++)for(let c=0;c<3;c++)if(g[r][c]==="1"){R(px+c+1,y+r+1,1,1,"#5a4a40");R(px+c,y+r,1,1,"#f4f4f4")}px+=4}}
+function drawBridge(x,span,hm,A,RY){const x1=Math.round(x-span/2),x2=Math.round(x+span/2),topY=RY-(Y(hm)-Y(A)),baseY=RY+Y(A),deckY=RY-(Y(30)-Y(A));if(baseY<0||topY>H)return;const C="#d2552b",D="#a53f1f",a=x1+8,b=x2-8;for(const tx of [a,b]){R(tx-1,topY,3,baseY-topY,C);R(tx-3,topY+(deckY-topY)*.3,7,1,C);R(tx-3,topY+(deckY-topY)*.65,7,1,C)}R(x1,deckY,x2-x1,2,D);const sag=deckY-3-topY;for(let p=a;p<=b;p++){const u=(p-a)/(b-a),yy=topY+sag*(1-4*(u-.5)*(u-.5));R(p,yy,1,1,C);if(p%3===0)R(p,yy+1,1,deckY-yy-1,D)}for(let p=x1;p<a;p++){const u=(p-x1)/(a-x1);R(p,deckY+(topY-deckY)*u,1,1,C)}for(let p=b+1;p<=x2;p++){const u=(p-b)/(x2-b);R(p,topY+(deckY-topY)*u,1,1,C)}}
 function draw(now){
  const A=S?S.alt:0,RY=Math.round(H*.46),rx=Math.round(W/2-36),cx=W/2;
- const t0=sky(A*1.8+200),t1=sky(A*.6);const N=24;
+ const th=S&&S.tag&&THEME[S.tag]&&A<16000?THEME[S.tag]:null;BC=th?th.bc:"#243756";const t0=th?th.top:sky(A*1.8+200),t1=th?th.hor:sky(A*.6);const N=24;
  for(let i=0;i<N;i++){const f=i/(N-1);R(0,i*H/N,W,H/N+1,`rgb(${t0.map((v,j)=>Math.round(v+(t1[j]-v)*f)).join(",")})`)}
  const sa=Math.min(1,Math.max(0,(Math.log(1+A)-Math.log(1+4000))/(Math.log(1+50000)-Math.log(1+4000))));
  if(sa>0)for(const s of stars){if(s[1]>H)continue;ctx.globalAlpha=sa*(.4+.6*Math.abs(Math.sin(now/600+s[2]*20)));R(s[0]*W,s[1],1,1,"#fff")}
  ctx.globalAlpha=1;
  if(A<16000)for(const c of clouds){const y=RY-(Y(c[0])-Y(A));if(y<-6||y>H)continue;ctx.globalAlpha=Math.min(1,(16000-A)/6000)*.9;const x=c[1]*W;R(x,y,18*c[2],3,"#fff");R(x+3,y-2,10*c[2],2,"#fff");R(x+8,y+3,12*c[2],1,"#dce9f7")}
  ctx.globalAlpha=1;
- for(const s of FAR)tower(cx+s[0],s[1],s[2],s[3],A,RY);tower(cx+50,8849,92,"ev",A,RY);tower(cx+9,3776,70,"fuji",A,RY);
- tower(cx+77,324,16,"eif",A,RY);tower(cx,541,12,"wtc",A,RY);tower(cx+36,828,12,"burj",A,RY);
+ if(th&&th.sun){const sx=cx+th.sun[0],sy2=RY-(Y(th.sun[1])-Y(A));for(const [r,a] of [[26,.10],[18,.16],[11,.28],[6,1]]){ctx.globalAlpha=a;ctx.fillStyle="#ffe08a";ctx.beginPath();ctx.arc(sx,sy2,r,0,7);ctx.fill()}ctx.globalAlpha=1}
+ if(th){for(const o of th.objs){if(o[3]==="sign")drawSign(cx+o[0],o[1],A,RY);else if(o[3]==="bridge")drawBridge(cx+o[0],o[2],o[1],A,RY);else if(NEWLM.includes(o[3]))LM(o[3],cx+o[0],o[1],o[2],A,RY);else tower(cx+o[0],o[1],o[2],o[3],A,RY)}}else{for(const s of FAR)tower(cx+s[0],s[1],s[2],s[3],A,RY);tower(cx+50,8849,92,"ev",A,RY);tower(cx+9,3776,70,"fuji",A,RY);
+ tower(cx+77,324,16,"eif",A,RY);tower(cx,541,12,"wtc",A,RY);tower(cx+36,828,12,"burj",A,RY);}
  const gy=RY+Y(A);
  if(gy<H){R(0,gy,W,H-gy+1,"#1b3b2c");R(0,gy,W,2,"#2f6b46");R(rx-10,gy,20,2,"#667")}
+ if(th&&th.tint){ctx.globalAlpha=th.tint[1];R(0,0,W,H,th.tint[0]);ctx.globalAlpha=1}
  // altitude ruler
  R(W-4,0,1,H,"rgba(255,255,255,.25)");
  for(const m of M){const y=RY-(Y(m[0])-Y(A));if(y>0&&y<H)R(W-7,y,5,1,"#fff")}
